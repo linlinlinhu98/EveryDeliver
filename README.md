@@ -43,10 +43,15 @@
 
 ## 快速导航
 
-- [完整设计文档 →](docs/DESIGN.md)
-- [技术架构 →](docs/ARCHITECTURE.md)
-- [MVP 任务拆解 →](docs/TASK_BREAKDOWN.md)
-- [问题讨论与决策记录 →](docs/QA_SUMMARY.md)
+| 文档 | 内容 | 适合 |
+| ---- | ---- | ---- |
+| [完整设计文档](docs/DESIGN.md) | 8 模块功能规格 + 关键决策 | 产品/设计/开发 |
+| [技术架构](docs/ARCHITECTURE.md) | 架构图 + SQL 表结构 + API + 安全 | 后端/全栈 |
+| [MVP 任务拆解](docs/TASK_BREAKDOWN.md) | 8 Phase 任务 + 依赖图 + 工时估算 | 项目管理/开发 |
+| [问题讨论与决策](docs/QA_SUMMARY.md) | 18 项最终决策 + 需求改进记录 | 全体参与者 |
+| [AI 开发提示词策略](docs/PROMPT_STRATEGY.md) | Phase 0-8 完整提示词 + 能力匹配矩阵 | **使用小浣熊开发者** |
+| [项目简介](docs/PROJECT_BRIEF.md) | 一句话版 + 1分钟版 + 完整版 | OPC 参赛材料 |
+| [PPT 幻灯片](ppt/everydeliver-slides.md) | Marp 格式 20 页答辩 PPT | OPC 路演 |
 
 ---
 
