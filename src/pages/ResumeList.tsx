@@ -64,13 +64,22 @@ export default function ResumeList() {
     <div className="page-container">
       <div className="page-header">
         <h1>我的简历</h1>
-        <button
-          className="btn btn-primary"
-          style={{ width: "auto" }}
-          onClick={() => navigate("/resumes/upload")}
-        >
-          + 上传新简历
-        </button>
+        <div style={{ display: "flex", gap: "0.5rem" }}>
+          <button
+            className="btn btn-outline"
+            style={{ width: "auto" }}
+            onClick={() => navigate("/resumes/agent")}
+          >
+            🤖 Agent 对话填写
+          </button>
+          <button
+            className="btn btn-primary"
+            style={{ width: "auto" }}
+            onClick={() => navigate("/resumes/upload")}
+          >
+            + 上传简历
+          </button>
+        </div>
       </div>
 
       {error && <div className="alert alert-error">{error}</div>}
