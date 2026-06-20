@@ -64,11 +64,11 @@ export default function Dashboard() {
           <span className="badge badge-ready">已上线</span>
         </div>
 
-        <div className="dashboard-card">
+        <div className="dashboard-card" onClick={() => navigate("/applications")} style={{ cursor: "pointer" }}>
           <div className="card-icon">📊</div>
           <h2>投递看板</h2>
           <p>追踪投递状态，智能提醒跟进</p>
-          <span className="badge">Phase 6 即将上线</span>
+          <span className="badge badge-ready">已上线</span>
         </div>
 
         <div className="dashboard-card">
