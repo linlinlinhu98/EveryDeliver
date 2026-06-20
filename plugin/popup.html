@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EveryDeliver</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      width: 360px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC", sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      font-size: 14px;
+    }
+    .header {
+      padding: 16px;
+      border-bottom: 1px solid #334155;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .header h1 { font-size: 16px; color: #3b82f6; }
+    .header .badge {
+      font-size: 10px;
+      background: rgba(59,130,246,0.15);
+      color: #3b82f6;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    .content { padding: 16px; }
+    .status-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+      padding: 10px 12px;
+      background: #1e293b;
+      border-radius: 6px;
+      font-size: 13px;
+    }
+    .dot { width: 8px; height: 8px; border-radius: 50%; }
+    .dot.active { background: #22c55e; }
+    .dot.inactive { background: #64748b; }
+    .preview {
+      background: #1e293b;
+      border-radius: 6px;
+      padding: 12px;
+      margin-bottom: 12px;
+      display: none;
+    }
+    .preview.visible { display: block; }
+    .preview .field { margin-bottom: 8px; }
+    .preview .field:last-child { margin-bottom: 0; }
+    .preview .label { font-size: 11px; color: #94a3b8; text-transform: uppercase; }
+    .preview .value { font-size: 13px; margin-top: 2px; }
+    .btn {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-primary {
+      background: #3b82f6;
+      color: #fff;
+    }
+    .btn-primary:hover { background: #2563eb; }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-secondary {
+      background: #1e293b;
+      color: #e2e8f0;
+      border: 1px solid #334155;
+      margin-top: 8px;
+    }
+    .btn-secondary:hover { background: #334155; }
+    .toast {
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      margin-top: 8px;
+      display: none;
+    }
+    .toast.success { display: block; background: rgba(34,197,94,0.15); color: #22c55e; }
+    .toast.error { display: block; background: rgba(239,68,68,0.15); color: #ef4444; }
+    .toast.warning { display: block; background: rgba(234,179,8,0.15); color: #eab308; }
+
+    /* Compliance modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.visible { display: flex; }
+    .modal {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 16px;
+      max-width: 340px;
+    }
+    .modal h2 { font-size: 16px; margin-bottom: 12px; color: #eab308; }
+    .modal p { font-size: 12px; color: #94a3b8; line-height: 1.6; margin-bottom: 8px; }
+    .modal .agree-row { display: flex; align-items: center; gap: 8px; margin: 12px 0; font-size: 13px; }
+    .modal .agree-row input { accent-color: #3b82f6; }
+    .modal .btn { margin-top: 4px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>EveryDeliver</h1>
+    <span class="badge">v0.1.0</span>
+  </div>
+
+  <div class="content">
+    <div class="status-bar" id="statusBar">
+      <span class="dot inactive" id="statusDot"></span>
+      <span id="statusText">检测中...</span>
+    </div>
+
+    <div class="preview" id="preview">
+      <div class="field">
+        <div class="label">公司</div>
+        <div class="value" id="pvCompany">-</div>
+      </div>
+      <div class="field">
+        <div class="label">岗位</div>
+        <div class="value" id="pvTitle">-</div>
+      </div>
+      <div class="field">
+        <div class="label">薪资</div>
+        <div class="value" id="pvSalary">-</div>
+      </div>
+      <div class="field">
+        <div class="label">城市</div>
+        <div class="value" id="pvCity">-</div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" id="btnExtract" disabled>抓取此职位</button>
+    <button class="btn btn-secondary" id="btnOpenApp">打开 EveryDeliver 桌面端</button>
+    <div class="toast" id="toast"></div>
+  </div>
+
+  <!-- Compliance notice (shown once) -->
+  <div class="modal-overlay" id="complianceModal">
+    <div class="modal">
+      <h2>⚠️ 合规风险提示</h2>
+      <p>本插件在您浏览招聘网站时读取页面内容，用于提取职位信息。</p>
+      <p>目标招聘平台的《用户服务协议》可能禁止自动化工具和辅助插件，使用本插件可能导致您的招聘平台账号受到限制或封禁。</p>
+      <p>本插件不会：发送虚假信息、代您投递、读取聊天内容、修改账号信息、上传密码。</p>
+      <div class="agree-row">
+        <input type="checkbox" id="chkAgree" />
+        <label for="chkAgree">我已了解上述风险，自愿启用</label>
+      </div>
+      <button class="btn btn-primary" id="btnAgree" disabled>确认并启用</button>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

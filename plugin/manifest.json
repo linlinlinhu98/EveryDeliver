@@ -1,0 +1,30 @@
+{
+  "manifest_version": 3,
+  "name": "EveryDeliver — 职位抓取助手",
+  "version": "0.1.0",
+  "description": "一键抓取 BOSS 直聘、猎聘等平台的职位信息到 EveryDeliver 平台",
+  "permissions": ["storage", "activeTab"],
+  "host_permissions": [
+    "https://*.zhipin.com/*",
+    "https://*.liepin.com/*"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "EveryDeliver"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://*.zhipin.com/job_detail/*",
+        "https://*.liepin.com/job/*"
+      ],
+      "js": ["content-script.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}
