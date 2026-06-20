@@ -7,14 +7,14 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      width: 360px;
+      width: 380px;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC", sans-serif;
       background: #0f172a;
       color: #e2e8f0;
       font-size: 14px;
     }
     .header {
-      padding: 16px;
+      padding: 14px 16px;
       border-bottom: 1px solid #334155;
       display: flex;
       align-items: center;
@@ -28,7 +28,7 @@
       padding: 2px 6px;
       border-radius: 4px;
     }
-    .content { padding: 16px; }
+    .content { padding: 14px 16px; }
     .status-bar {
       display: flex;
       align-items: center;
@@ -37,9 +37,9 @@
       padding: 10px 12px;
       background: #1e293b;
       border-radius: 6px;
-      font-size: 13px;
+      font-size: 12px;
     }
-    .dot { width: 8px; height: 8px; border-radius: 50%; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
     .dot.active { background: #22c55e; }
     .dot.inactive { background: #64748b; }
     .preview {
@@ -52,10 +52,23 @@
     .preview.visible { display: block; }
     .preview .field { margin-bottom: 8px; }
     .preview .field:last-child { margin-bottom: 0; }
-    .preview .label { font-size: 11px; color: #94a3b8; text-transform: uppercase; }
-    .preview .value { font-size: 13px; margin-top: 2px; }
+    .preview .label { font-size: 10px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; }
+    .preview .value { font-size: 13px; margin-top: 2px; word-break: break-all; }
+    .preview .value.tags { font-size: 12px; color: #60a5fa; }
+    .preview .value.jd-preview {
+      font-size: 11px;
+      color: #94a3b8;
+      max-height: 80px;
+      overflow-y: auto;
+      line-height: 1.5;
+      white-space: pre-wrap;
+    }
+    .preview .field-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
     .btn {
-      width: 100%;
       padding: 10px;
       border: none;
       border-radius: 6px;
@@ -65,22 +78,29 @@
       transition: background 0.2s;
     }
     .btn-primary {
+      width: 100%;
       background: #3b82f6;
       color: #fff;
     }
     .btn-primary:hover { background: #2563eb; }
     .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .btn-row .btn { flex: 1; }
     .btn-secondary {
       background: #1e293b;
       color: #e2e8f0;
       border: 1px solid #334155;
-      margin-top: 8px;
     }
     .btn-secondary:hover { background: #334155; }
+    .btn-sm { padding: 8px; font-size: 12px; }
     .toast {
       padding: 8px 12px;
       border-radius: 6px;
-      font-size: 13px;
+      font-size: 12px;
       margin-top: 8px;
       display: none;
     }
@@ -107,17 +127,24 @@
       margin: 16px;
       max-width: 340px;
     }
-    .modal h2 { font-size: 16px; margin-bottom: 12px; color: #eab308; }
+    .modal h2 { font-size: 15px; margin-bottom: 12px; color: #eab308; }
     .modal p { font-size: 12px; color: #94a3b8; line-height: 1.6; margin-bottom: 8px; }
-    .modal .agree-row { display: flex; align-items: center; gap: 8px; margin: 12px 0; font-size: 13px; }
+    .modal .agree-row { display: flex; align-items: center; gap: 8px; margin: 14px 0; font-size: 12px; }
     .modal .agree-row input { accent-color: #3b82f6; }
     .modal .btn { margin-top: 4px; }
+
+    .queue-badge {
+      display: inline-block;
+      font-size: 11px;
+      color: #eab308;
+      margin-left: 4px;
+    }
   </style>
 </head>
 <body>
   <div class="header">
     <h1>EveryDeliver</h1>
-    <span class="badge">v0.1.0</span>
+    <span class="badge">v0.2.0</span>
   </div>
 
   <div class="content">
@@ -127,36 +154,68 @@
     </div>
 
     <div class="preview" id="preview">
-      <div class="field">
-        <div class="label">公司</div>
-        <div class="value" id="pvCompany">-</div>
+      <div class="field-row">
+        <div class="field">
+          <div class="label">公司</div>
+          <div class="value" id="pvCompany">-</div>
+        </div>
+        <div class="field">
+          <div class="label">平台</div>
+          <div class="value" id="pvPlatform">-</div>
+        </div>
       </div>
       <div class="field">
         <div class="label">岗位</div>
         <div class="value" id="pvTitle">-</div>
       </div>
-      <div class="field">
-        <div class="label">薪资</div>
-        <div class="value" id="pvSalary">-</div>
+      <div class="field-row">
+        <div class="field">
+          <div class="label">薪资</div>
+          <div class="value" id="pvSalary">-</div>
+        </div>
+        <div class="field">
+          <div class="label">城市</div>
+          <div class="value" id="pvCity">-</div>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <div class="label">经验要求</div>
+          <div class="value" id="pvExperience">-</div>
+        </div>
+        <div class="field">
+          <div class="label">学历要求</div>
+          <div class="value" id="pvEducation">-</div>
+        </div>
       </div>
       <div class="field">
-        <div class="label">城市</div>
-        <div class="value" id="pvCity">-</div>
+        <div class="label">标签</div>
+        <div class="value tags" id="pvTags">-</div>
+      </div>
+      <div class="field">
+        <div class="label">JD 描述预览</div>
+        <div class="value jd-preview" id="jdPreview">-</div>
       </div>
     </div>
 
-    <button class="btn btn-primary" id="btnExtract" disabled>抓取此职位</button>
-    <button class="btn btn-secondary" id="btnOpenApp">打开 EveryDeliver 桌面端</button>
+    <button class="btn btn-primary" id="btnExtract" disabled>
+      抓取此职位 <span id="extractCount" class="queue-badge"></span>
+    </button>
+    <div class="btn-row">
+      <button class="btn btn-secondary btn-sm" id="btnOpenApp">打开桌面端</button>
+      <button class="btn btn-secondary btn-sm" id="btnSettings">偏好设置</button>
+    </div>
     <div class="toast" id="toast"></div>
   </div>
 
-  <!-- Compliance notice (shown once) -->
+  <!-- Compliance notice (shown once, on first use) -->
   <div class="modal-overlay" id="complianceModal">
     <div class="modal">
       <h2>⚠️ 合规风险提示</h2>
-      <p>本插件在您浏览招聘网站时读取页面内容，用于提取职位信息。</p>
-      <p>目标招聘平台的《用户服务协议》可能禁止自动化工具和辅助插件，使用本插件可能导致您的招聘平台账号受到限制或封禁。</p>
-      <p>本插件不会：发送虚假信息、代您投递、读取聊天内容、修改账号信息、上传密码。</p>
+      <p>本插件在您浏览招聘网站时读取页面内容，用于提取职位信息到 EveryDeliver 平台。</p>
+      <p>目标招聘平台的《用户服务协议》可能禁止自动化工具和辅助插件，<strong>使用本插件可能导致您的招聘平台账号受到限制或封禁。</strong></p>
+      <p>本插件<strong>不会</strong>：发送虚假信息、代您投递、读取聊天内容、修改账号信息、上传密码。</p>
+      <p>仅提取您当前浏览页面的职位信息，不会批量抓取或高频请求。</p>
       <div class="agree-row">
         <input type="checkbox" id="chkAgree" />
         <label for="chkAgree">我已了解上述风险，自愿启用</label>

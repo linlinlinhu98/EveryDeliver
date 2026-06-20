@@ -1,45 +1,58 @@
 /**
- * EveryDeliver Browser Extension — Popup Script
+ * EveryDeliver Browser Extension — Popup Script (Phase 3.2–3.6)
  *
- * Handles the popup UI: compliance check, job extraction,
- * preview display, and import confirmation.
+ * Enhanced popup with:
+ * - Compliance check & confirmation flow
+ * - Structured job preview (company, title, salary, city, exp, edu, tags)
+ * - JD text preview (truncated)
+ * - One-click import with throttle awareness
+ * - Import queue status
+ * - Quick link to EveryDeliver desktop app
  */
 
-interface JobData {
-  companyName: string;
-  title: string;
-  jdText: string;
-  salary?: string;
-  city?: string;
-  sourceUrl: string;
-  sourcePlatform: "boss" | "liepin" | "generic";
-}
+import type { JobData, ImportPayload } from "./types";
 
-// ── DOM elements ──────────────────────────────────
+// ============================================================
+// DOM Elements
+// ============================================================
+
 const statusDot = document.getElementById("statusDot")!;
 const statusText = document.getElementById("statusText")!;
 const preview = document.getElementById("preview")!;
+const jdPreview = document.getElementById("jdPreview")!;
 const btnExtract = document.getElementById("btnExtract") as HTMLButtonElement;
-const btnOpenApp = document.getElementById("btnOpenApp")!;
+const btnOpenApp = document.getElementById("btnOpenApp") as HTMLButtonElement;
+const btnSettings = document.getElementById("btnSettings") as HTMLButtonElement;
 const toast = document.getElementById("toast")!;
 const complianceModal = document.getElementById("complianceModal")!;
 const chkAgree = document.getElementById("chkAgree") as HTMLInputElement;
 const btnAgree = document.getElementById("btnAgree") as HTMLButtonElement;
+const extractCount = document.getElementById("extractCount")!;
 
 // Preview fields
 const pvCompany = document.getElementById("pvCompany")!;
 const pvTitle = document.getElementById("pvTitle")!;
 const pvSalary = document.getElementById("pvSalary")!;
 const pvCity = document.getElementById("pvCity")!;
+const pvExperience = document.getElementById("pvExperience")!;
+const pvEducation = document.getElementById("pvEducation")!;
+const pvTags = document.getElementById("pvTags")!;
+const pvPlatform = document.getElementById("pvPlatform")!;
 
-// ── State ─────────────────────────────────────────
+// ============================================================
+// State
+// ============================================================
+
 let currentJob: JobData | null = null;
-let supabaseClient: ReturnType<typeof import("@supabase/supabase-js").createClient> | null = null;
+let queueCount = 0;
 
-// ── Compliance check ──────────────────────────────
+// ============================================================
+// Compliance
+// ============================================================
+
 async function checkCompliance(): Promise<boolean> {
-  const result = await chrome.storage.local.get("complianceAccepted");
-  return result.complianceAccepted === true;
+  const result = await chrome.storage.local.get("compliance");
+  return result.compliance?.accepted === true;
 }
 
 function showComplianceModal(): void {
@@ -51,162 +64,295 @@ chkAgree.addEventListener("change", () => {
 });
 
 btnAgree.addEventListener("click", async () => {
-  await chrome.storage.local.set({ complianceAccepted: true });
+  await chrome.runtime.sendMessage({ action: "acceptCompliance" });
   complianceModal.classList.remove("visible");
   initializePopup();
 });
 
-// ── Toast ─────────────────────────────────────────
+// ============================================================
+// Toast
+// ============================================================
+
 function showToast(message: string, type: "success" | "error" | "warning"): void {
   toast.textContent = message;
   toast.className = `toast ${type}`;
-  setTimeout(() => {
+  clearTimeout((toast as any)._timeout);
+  (toast as any)._timeout = setTimeout(() => {
     toast.className = "toast";
-  }, 3000);
+  }, 4000);
 }
 
-// ── Platform detection ────────────────────────────
-function updateStatus(platform: string): void {
+// ============================================================
+// Status & Preview
+// ============================================================
+
+function updateStatus(
+  platform: string,
+  isSearchPage: boolean,
+  hasData: boolean,
+): void {
   if (platform === "boss" || platform === "liepin") {
     statusDot.className = "dot active";
-    statusText.textContent = `已检测到 ${platform === "boss" ? "BOSS 直聘" : "猎聘"} 职位页`;
-    btnExtract.disabled = false;
+    const label = platform === "boss" ? "BOSS 直聘" : "猎聘";
+    if (isSearchPage) {
+      statusText.textContent = `${label} 搜索结果页 — 点击职位详情后抓取`;
+      btnExtract.disabled = true;
+    } else if (hasData) {
+      statusText.textContent = `${label} 职位页 — 已提取`;
+      btnExtract.disabled = false;
+    } else {
+      statusText.textContent = `${label} 页面 — 提取中...`;
+      btnExtract.disabled = true;
+    }
   } else {
     statusDot.className = "dot inactive";
-    statusText.textContent = "当前页面不是支持的招聘平台";
+    statusText.textContent = "请在 BOSS 直聘或猎聘职位详情页使用";
     btnExtract.disabled = true;
   }
 }
 
-// ── Populate preview ──────────────────────────────
 function updatePreview(data: JobData): void {
   currentJob = data;
   pvCompany.textContent = data.companyName || "-";
   pvTitle.textContent = data.title || "-";
-  pvSalary.textContent = data.salary || "-";
-  pvCity.textContent = data.city || "-";
+  pvSalary.textContent = data.salary || "未标注";
+  pvCity.textContent = data.city || "未标注";
+  pvExperience.textContent = data.experience || "未标注";
+  pvEducation.textContent = data.education || "未标注";
+  pvTags.textContent = data.tags?.slice(0, 5).join(" · ") || "无";
+  pvPlatform.textContent = data.sourcePlatform === "boss"
+    ? "BOSS 直聘"
+    : data.sourcePlatform === "liepin"
+    ? "猎聘"
+    : "通用";
+
+  // JD text preview
+  const jdText = data.jdText || "";
+  jdPreview.textContent = jdText.length > 300
+    ? jdText.substring(0, 300) + "..."
+    : jdText || "无 JD 文本";
+
   preview.classList.add("visible");
+  btnExtract.disabled = false;
 }
 
-// ── Job extraction ────────────────────────────────
-async function extractJob(): Promise<void> {
+function updateQueueCount(): void {
+  extractCount.textContent = queueCount > 0
+    ? `(${queueCount} 条待同步)`
+    : "";
+}
+
+// ============================================================
+// Extraction & Import
+// ============================================================
+
+async function extractAndImport(): Promise<void> {
   if (!currentJob) return;
 
   btnExtract.disabled = true;
   btnExtract.textContent = "导入中...";
 
   try {
-    // Quality check: validate required fields
+    // Quality gates (client-side)
     if (!currentJob.companyName || currentJob.companyName.length < 2) {
       showToast("公司名过短或为空，无法导入", "error");
+      btnExtract.disabled = false;
+      btnExtract.textContent = "抓取此职位";
       return;
     }
     if (!currentJob.title || currentJob.title.length < 2) {
-      showToast("岗位标题过短或为空，无法导入", "error");
+      showToast("岗位标题过短或为空", "error");
+      btnExtract.disabled = false;
+      btnExtract.textContent = "抓取此职位";
       return;
     }
     if (!currentJob.jdText || currentJob.jdText.length < 50) {
-      showToast("JD 描述过短（< 50 字），无法导入", "warning");
+      showToast("JD 描述过短（< 50 字）", "warning");
+      btnExtract.disabled = false;
+      btnExtract.textContent = "抓取此职位";
       return;
     }
 
-    // Compute quality score (simplified)
+    // Compute quality score
     let qualityScore = 1.0;
-    if (!currentJob.salary) qualityScore -= 0.2;
+    if (!currentJob.salary) qualityScore -= 0.15;
     if (!currentJob.city) qualityScore -= 0.1;
     if (currentJob.jdText.length < 200) qualityScore -= 0.1;
 
-    // Generate duplicate key
-    const standardizedTitle = currentJob.title.replace(/\s+/g, "").toLowerCase();
-    const duplicateKey = `${currentJob.companyName}_${standardizedTitle}`
+    const standardizedTitle = currentJob.title
       .replace(/\s+/g, "")
       .toLowerCase();
+    const standardizedCompany = currentJob.companyName
+      .replace(/\s+/g, "")
+      .toLowerCase();
+    const duplicateKey = `${standardizedCompany}|${standardizedTitle}`;
 
-    // Store in Supabase (fallback: store locally and sync later)
-    // For MVP, we store via message passing to the desktop app
-    // The desktop app handles the actual Supabase insert
-    const importData = {
+    const payload: ImportPayload = {
       ...currentJob,
-      qualityScore,
+      qualityScore: Math.max(0, Math.round(qualityScore * 100) / 100),
       duplicateKey,
       importStatus: qualityScore >= 0.8 ? "complete" : "needs_review",
+      extractedAt: new Date().toISOString(),
     };
 
-    // Send to desktop app or store locally
-    await chrome.storage.local.set({ lastImport: importData });
+    // Persist locally as fallback
+    const existing = await chrome.storage.local.get("importQueue");
+    const queue: ImportPayload[] = existing.importQueue || [];
+    if (!queue.some((item) => item.duplicateKey === duplicateKey)) {
+      queue.push(payload);
+      await chrome.storage.local.set({ importQueue: queue });
+      queueCount = queue.length;
+      updateQueueCount();
+    }
 
-    showToast("已导入！请在 EveryDeliver 桌面端查看", "success");
+    // Notify background worker for sync
+    try {
+      const result = await chrome.runtime.sendMessage({
+        action: "importJob",
+        payload,
+      });
+
+      if (result?.error) {
+        showToast(result.error, "warning");
+      } else {
+        showToast("已导入！请在 EveryDeliver 桌面端查看", "success");
+      }
+    } catch {
+      // Background may not be ready — data is in local storage
+      showToast("已保存本地，打开桌面端后自动同步", "success");
+    }
   } catch (err) {
-    const message = err instanceof Error ? err.message : "未知错误";
-    showToast(`导入失败：${message}`, "error");
+    showToast(`导入失败：${err instanceof Error ? err.message : "未知错误"}`, "error");
   } finally {
     btnExtract.disabled = false;
     btnExtract.textContent = "抓取此职位";
   }
 }
 
-// ── Open desktop app ──────────────────────────────
-btnOpenApp.addEventListener("click", () => {
-  // Deep link to Tauri app (custom protocol)
-  window.open("everydeliver://app", "_blank");
-});
+// ============================================================
+// Event Handlers
+// ============================================================
 
-// ── Listen for page detection from content script ─
-chrome.runtime.onMessage.addListener((request) => {
-  if (request.action === "pageDetected") {
-    updateStatus(request.platform);
-  }
-});
-
-// ── Extract on button click ───────────────────────
 btnExtract.addEventListener("click", async () => {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  if (!tab?.id) return;
-
-  const data: JobData | null = await chrome.tabs.sendMessage(tab.id, {
-    action: "extractJob",
-  });
-
-  if (data) {
-    updatePreview(data);
-    await extractJob();
-  } else {
-    showToast("无法提取职位信息，请刷新页面后重试", "error");
-  }
-});
-
-// ── Initialize ────────────────────────────────────
-async function initializePopup(): Promise<void> {
-  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  if (!tab?.id) return;
-
-  // Try to get initial page detection
-  try {
-    const response = await chrome.tabs.sendMessage(tab.id, {
-      action: "pageDetected",
-    });
-    if (response) {
-      updateStatus(response.platform);
-    }
-  } catch {
-    // Content script may not be injected yet — that's okay
-    statusText.textContent = "请打开招聘网站职位详情页";
+  if (!tab?.id) {
+    showToast("无法获取当前标签页", "error");
+    return;
   }
 
-  // Auto-extract on supported pages
   try {
+    // Request extraction from content script
     const data: JobData | null = await chrome.tabs.sendMessage(tab.id, {
       action: "extractJob",
     });
+
     if (data) {
       updatePreview(data);
+      await extractAndImport();
+    } else {
+      showToast("未检测到职位信息。请确认在职位详情页", "error");
     }
   } catch {
-    // Not a supported page
+    // Content script not injected — try injecting or show error
+    showToast("请在招聘网站职位详情页打开插件", "error");
+  }
+});
+
+btnOpenApp.addEventListener("click", () => {
+  // Try deep link first (Tauri custom protocol)
+  window.open("everydeliver://app", "_blank");
+  // Also try opening the web app
+  setTimeout(() => {
+    window.open("http://localhost:5173/dashboard", "_blank");
+  }, 500);
+});
+
+btnSettings.addEventListener("click", () => {
+  // Open the extension options page or desktop preferences
+  window.open("http://localhost:5173/preferences", "_blank");
+});
+
+// ============================================================
+// Message Listener (from content script & background)
+// ============================================================
+
+chrome.runtime.onMessage.addListener((message) => {
+  switch (message.action) {
+    case "pageDetected":
+      updateStatus(message.platform, false, false);
+      break;
+
+    case "jobExtracted":
+      if (message.data) {
+        updatePreview(message.data);
+        updateStatus(message.data.sourcePlatform, false, true);
+      }
+      break;
+
+    case "newImportAvailable":
+      // Background notifies that a new import was queued
+      queueCount++;
+      updateQueueCount();
+      break;
+  }
+});
+
+// ============================================================
+// Initialize
+// ============================================================
+
+async function initializePopup(): Promise<void> {
+  // Load queue count
+  const result = await chrome.storage.local.get("importQueue");
+  const queue: ImportPayload[] = result.importQueue || [];
+  queueCount = queue.length;
+  updateQueueCount();
+
+  // Query current tab status
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (!tab?.id) {
+    statusText.textContent = "无法获取标签页信息";
+    return;
+  }
+
+  try {
+    // Get page status from content script
+    const status: {
+      platform: string;
+      isSearchPage: boolean;
+      hasJobData: boolean;
+      url: string;
+    } | null = await chrome.tabs.sendMessage(tab.id, {
+      action: "getPageStatus",
+    });
+
+    if (status) {
+      updateStatus(status.platform, status.isSearchPage, status.hasJobData);
+    }
+
+    // Try to get any already-extracted job data
+    const data: JobData | null = await chrome.tabs.sendMessage(tab.id, {
+      action: "extractJob",
+    });
+
+    if (data) {
+      updatePreview(data);
+      if (status) {
+        updateStatus(status.platform, status.isSearchPage, true);
+      }
+    }
+  } catch {
+    // Content script not injected — page not matched
+    statusDot.className = "dot inactive";
+    statusText.textContent = "请在招聘网站职位详情页打开插件";
+    btnExtract.disabled = true;
   }
 }
 
-// ── Start ─────────────────────────────────────────
+// ============================================================
+// Start
+// ============================================================
+
 (async () => {
   const alreadyAccepted = await checkCompliance();
 
