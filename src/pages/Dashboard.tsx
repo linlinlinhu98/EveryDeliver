@@ -57,11 +57,11 @@ export default function Dashboard() {
           <span className="badge badge-ready">已上线</span>
         </div>
 
-        <div className="dashboard-card">
+        <div className="dashboard-card" onClick={() => navigate("/positions/import")} style={{ cursor: "pointer" }}>
           <div className="card-icon">🔍</div>
           <h2>职位搜索</h2>
           <p>导入 JD，智能匹配，AI 优化简历</p>
-          <span className="badge">Phase 2-4 即将上线</span>
+          <span className="badge badge-ready">已上线</span>
         </div>
 
         <div className="dashboard-card">

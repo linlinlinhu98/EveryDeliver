@@ -10,6 +10,8 @@ import ResumeList from "@/pages/ResumeList";
 import ResumeUpload from "@/pages/ResumeUpload";
 import Preferences from "@/pages/Preferences";
 import ResumeAgent from "@/pages/ResumeAgent";
+import JDImport from "@/pages/JDImport";
+import JobPositionList from "@/pages/JobPositionList";
 
 export default function App() {
   const [session, setSession] = useState<Session | null>(null);
@@ -58,6 +60,8 @@ export default function App() {
         <Route path="/resumes/upload" element={<ResumeUpload />} />
         <Route path="/preferences" element={<Preferences />} />
         <Route path="/resumes/agent" element={<ResumeAgent />} />
+        <Route path="/positions" element={<JobPositionList />} />
+        <Route path="/positions/import" element={<JDImport />} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </Layout>
