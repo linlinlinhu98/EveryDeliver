@@ -9,7 +9,9 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "tauri": "tauri",
-    "build:plugin": "node plugin/build.js"
+    "build:plugin": "node plugin/build.js",
+    "test:e2e": "npx playwright test --config=e2e/playwright.config.ts",
+    "test:e2e:ui": "npx playwright test --config=e2e/playwright.config.ts --ui"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.1",
