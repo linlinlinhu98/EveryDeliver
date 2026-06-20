@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 
 interface Profile {
@@ -7,6 +8,7 @@ interface Profile {
 }
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const [profile, setProfile] = useState<Profile | null>(null);
 
   useEffect(() => {
@@ -41,11 +43,15 @@ export default function Dashboard() {
       </div>
 
       <div className="dashboard-grid">
-        <div className="dashboard-card">
+        <div
+          className="dashboard-card clickable"
+          onClick={() => navigate("/resumes")}
+          style={{ cursor: "pointer" }}
+        >
           <div className="card-icon">📄</div>
           <h2>我的简历</h2>
           <p>上传或创建简历，管理简历模块</p>
-          <span className="badge">Phase 1 即将上线</span>
+          <span className="badge badge-ready">已上线</span>
         </div>
 
         <div className="dashboard-card">

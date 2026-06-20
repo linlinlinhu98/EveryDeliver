@@ -319,3 +319,151 @@ a:hover {
   background: rgba(59, 130, 246, 0.15);
   color: var(--color-primary);
 }
+
+.badge-primary {
+  background: rgba(59, 130, 246, 0.2);
+  color: #60a5fa;
+  margin-left: 0.5rem;
+  vertical-align: middle;
+}
+
+.badge-ready {
+  background: rgba(34, 197, 94, 0.15);
+  color: var(--color-success);
+}
+
+/* ===== Page Layout ===== */
+.page-container {
+  max-width: 900px;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.page-header h1 {
+  font-size: 1.5rem;
+}
+
+.page-subtitle {
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  width: 100%;
+}
+
+/* ===== File Upload ===== */
+.file-upload-wrapper {
+  max-width: 500px;
+}
+
+.file-upload-zone {
+  border: 2px dashed var(--color-border);
+  border-radius: var(--radius);
+  padding: 3rem 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.file-upload-zone:hover,
+.file-upload-zone.dragging {
+  border-color: var(--color-primary);
+  background: rgba(59, 130, 246, 0.05);
+}
+
+.upload-icon {
+  font-size: 3rem;
+  margin-bottom: 0.75rem;
+}
+
+.upload-text {
+  font-size: 1rem;
+  margin-bottom: 0.35rem;
+}
+
+.upload-hint {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+/* ===== Review Section ===== */
+.review-section {
+  max-width: 700px;
+}
+
+.review-section textarea {
+  width: 100%;
+  padding: 0.75rem;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  color: var(--color-text);
+  font-family: "Courier New", monospace;
+  font-size: 0.9rem;
+  resize: vertical;
+  line-height: 1.6;
+}
+
+.review-section textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.btn-row {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+/* ===== Resume List ===== */
+.empty-state {
+  text-align: center;
+  padding: 3rem;
+  color: var(--color-text-muted);
+}
+
+.empty-state p {
+  margin-bottom: 1rem;
+}
+
+.resume-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.resume-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+  transition: border-color 0.2s;
+}
+
+.resume-card:hover {
+  border-color: var(--color-primary);
+}
+
+.resume-card-body h3 {
+  font-size: 1rem;
+  margin-bottom: 0.15rem;
+}
+
+.resume-meta {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.resume-card-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}

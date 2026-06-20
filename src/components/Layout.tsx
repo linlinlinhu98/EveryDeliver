@@ -24,6 +24,9 @@ export default function Layout({ session, children }: LayoutProps) {
           <button className="nav-link" onClick={() => navigate("/dashboard")}>
             首页
           </button>
+          <button className="nav-link" onClick={() => navigate("/resumes")}>
+            我的简历
+          </button>
         </div>
         <div className="nav-user">
           <span className="user-email">{session.user.email}</span>
