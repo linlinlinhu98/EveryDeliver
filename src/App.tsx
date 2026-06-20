@@ -8,6 +8,7 @@ import Register from "@/pages/Register";
 import Dashboard from "@/pages/Dashboard";
 import ResumeList from "@/pages/ResumeList";
 import ResumeUpload from "@/pages/ResumeUpload";
+import Preferences from "@/pages/Preferences";
 
 export default function App() {
   const [session, setSession] = useState<Session | null>(null);
@@ -54,6 +55,7 @@ export default function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/resumes" element={<ResumeList />} />
         <Route path="/resumes/upload" element={<ResumeUpload />} />
+        <Route path="/preferences" element={<Preferences />} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </Layout>
