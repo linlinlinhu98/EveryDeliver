@@ -1,22 +1,35 @@
 {
   "manifest_version": 3,
   "name": "EveryDeliver — 职位抓取助手",
-  "version": "0.1.0",
-  "description": "一键抓取 BOSS 直聘、猎聘等平台的职位信息到 EveryDeliver 平台",
-  "permissions": ["storage", "activeTab"],
+  "version": "0.2.0",
+  "description": "一键抓取 BOSS 直聘、猎聘等平台的职位信息到 EveryDeliver 平台，支持智能去重与质量检测",
+  "permissions": [
+    "storage",
+    "activeTab",
+    "contextMenus"
+  ],
   "host_permissions": [
     "https://*.zhipin.com/*",
-    "https://*.liepin.com/*"
+    "https://*.liepin.com/*",
+    "https://*.51job.com/*",
+    "https://*.lagou.com/*",
+    "https://*.linkedin.com/*"
   ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
   "action": {
     "default_popup": "popup.html",
-    "default_title": "EveryDeliver"
+    "default_title": "EveryDeliver — 职位抓取"
   },
   "content_scripts": [
     {
       "matches": [
-        "https://*.zhipin.com/job_detail/*",
-        "https://*.liepin.com/job/*"
+        "https://*.zhipin.com/*",
+        "https://*.liepin.com/*",
+        "https://*.51job.com/*",
+        "https://*.lagou.com/*"
       ],
       "js": ["content-script.js"],
       "run_at": "document_idle"
