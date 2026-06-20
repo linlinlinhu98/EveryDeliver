@@ -25,13 +25,19 @@ export default function Layout({ session, children }: LayoutProps) {
             首页
           </button>
           <button className="nav-link" onClick={() => navigate("/resumes")}>
-            我的简历
+            简历
           </button>
           <button className="nav-link" onClick={() => navigate("/positions")}>
-            职位列表
+            职位
+          </button>
+          <button className="nav-link" onClick={() => navigate("/applications")}>
+            看板
+          </button>
+          <button className="nav-link" onClick={() => navigate("/interview-prep")}>
+            面试
           </button>
           <button className="nav-link" onClick={() => navigate("/preferences")}>
-            偏好设置
+            偏好
           </button>
         </div>
         <div className="nav-user">
