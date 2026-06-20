@@ -13,6 +13,7 @@ import ResumeAgent from "@/pages/ResumeAgent";
 import JDImport from "@/pages/JDImport";
 import JobPositionList from "@/pages/JobPositionList";
 import MatchDetail from "@/pages/MatchDetail";
+import ApplicationBoard from "@/pages/ApplicationBoard";
 import ResumeBuilder from "@/pages/ResumeBuilder";
 import InterviewPrep from "@/pages/InterviewPrep";
 
@@ -67,6 +68,7 @@ export default function App() {
         <Route path="/positions/import" element={<JDImport />} />
         <Route path="/positions/:id" element={<MatchDetail />} />
         <Route path="/resumes/builder" element={<ResumeBuilder />} />
+        <Route path="/applications" element={<ApplicationBoard />} />
         <Route path="/interview-prep" element={<InterviewPrep />} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
