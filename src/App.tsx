@@ -16,6 +16,11 @@ import MatchDetail from "@/pages/MatchDetail";
 import ApplicationBoard from "@/pages/ApplicationBoard";
 import ResumeBuilder from "@/pages/ResumeBuilder";
 import InterviewPrep from "@/pages/InterviewPrep";
+import {
+  startRealtimeSync,
+  stopRealtimeSync,
+} from "@/services/realtime-sync";
+import type { SyncEvent } from "@/services/realtime-sync";
 
 export default function App() {
   const [session, setSession] = useState<Session | null>(null);
@@ -35,6 +40,16 @@ export default function App() {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  // Start/stop Realtime sync based on auth state
+  useEffect(() => {
+    if (session) {
+      startRealtimeSync();
+    } else {
+      stopRealtimeSync();
+    }
+    return () => stopRealtimeSync();
+  }, [session]);
 
   if (loading) {
     return (
