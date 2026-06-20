@@ -8,7 +8,8 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "build:plugin": "node plugin/build.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.1",
